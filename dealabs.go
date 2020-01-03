@@ -6,6 +6,8 @@ import (
 	"github.com/dghubble/oauth1"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"time"
 )
 
 type Dealabs struct {
@@ -35,20 +37,27 @@ func New() *Dealabs {
 
 func (d *Dealabs) GetHotDeals(paramsOverride map[string]string) *Deals {
 	// Params
+	path := "https://www.dealabs.com/rest_api/v2/thread"
 	params := make(map[string]string)
 	params["order_by"] = "hot"
 	params["limit"] = "50"
+	q := url.Values{}
 	for k, v := range paramsOverride {
 		params[k] = v
 	}
+	for k, v := range params {
+		q.Add(k, v)
+	}
+	req, err := http.NewRequest("GET", path, nil)
 	// Http request
-	path := "https://www.dealabs.com/rest_api/v2/thread"
-	resp, _ := d.httpClient.Get(path)
+	req.URL.RawQuery = q.Encode()
+	resp, _ := d.httpClient.Do(req)
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	// Parsing
 	deals := Deals{}
-	err := json.Unmarshal(body, &deals)
+	err = json.Unmarshal(body, &deals)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -58,23 +67,37 @@ func (d *Dealabs) GetHotDeals(paramsOverride map[string]string) *Deals {
 
 func (d *Dealabs) GetNewDeals(paramsOverride map[string]string) *Deals {
 	// Params
+	path := "https://www.dealabs.com/rest_api/v2/thread"
 	params := make(map[string]string)
 	params["order_by"] = "new"
 	params["limit"] = "50"
+	q := url.Values{}
 	for k, v := range paramsOverride {
 		params[k] = v
 	}
+	for k, v := range params {
+		q.Add(k, v)
+	}
+	req, err := http.NewRequest("GET", path, nil)
+	req.URL.RawQuery = q.Encode()
 	// Http request
-	path := "https://www.dealabs.com/rest_api/v2/thread"
-	resp, _ := d.httpClient.Get(path)
+
+	resp, _ := d.httpClient.Do(req)
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	// Parsing
 	deals := Deals{}
-	err := json.Unmarshal(body, &deals)
+	err = json.Unmarshal(body, &deals)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	return &deals
+}
+
+func (deal *Data) PublishedAt() time.Time {
+	if deal.IsHot {
+		return time.Unix(deal.HotDate, 0)
+	}
+	return time.Unix(deal.Submitted, 0)
 }

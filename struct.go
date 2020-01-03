@@ -7,13 +7,14 @@ type Data struct {
 	Description       string  `json:"description"`
 	Title             string  `json:"title"`
 	Origin            string  `json:"origin"`
-	Submitted         int     `json:"submitted"`
-	Updated           int     `json:"updated"`
+	Submitted         int64     `json:"submitted"`
+	Updated           int64     `json:"updated"`
 	Expired           bool    `json:"expired"`
 	Status            string  `json:"status"`
 	Local             bool    `json:"local"`
-	LastCommented     int     `json:"last_commented"`
+	LastCommented     int64     `json:"last_commented"`
 	CommentCount      int     `json:"comment_count"`
+	HotDate           int64     `json:"hot_date"`
 	GroupCount        int     `json:"group_count"`
 	Price             float64 `json:"price,omitempty"`
 	DealURI           string  `json:"deal_uri"`
