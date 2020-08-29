@@ -1,4 +1,4 @@
-package dealabs
+package pepper
 
 type Data struct {
 	DealType          string  `json:"_type"`
