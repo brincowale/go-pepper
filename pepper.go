@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dghubble/oauth1"
+	"github.com/hashicorp/go-retryablehttp"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -27,16 +28,17 @@ func New(domain string, clientKey string, clientSecret string, pkg string) *Pepp
 	headers["Pepper-Hardware-Id"] = "5bce296a65215d0bb3b9751bb77b0a1d"
 	headers["Host"] = domain
 	config := oauth1.NewConfig(clientKey, clientSecret)
-	httpClient := config.Client(oauth1.NoContext, &oauth1.Token{
-		Token:       "",
-		TokenSecret: "",
-	})
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient = config.Client(oauth1.NoContext, &oauth1.Token{Token: "", TokenSecret: ""})
+	retryClient.RetryMax = 2
+	retryClient.HTTPClient.Timeout = time.Second * 30
+	httpClient := retryClient.StandardClient()
 	return &Pepper{domain, clientKey, clientSecret, headers, httpClient}
 }
 
 func (d *Pepper) GetHotDeals(paramsOverride map[string]string) *Deals {
 	// Params
-	path := "https://" + d.Domain + "/rest_api/v2/thread"
+	path := fmt.Sprintf("https://%s/rest_api/v2/thread", d.Domain)
 	params := make(map[string]string)
 	params["order_by"] = "hot"
 	params["limit"] = "50"
